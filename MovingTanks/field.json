@@ -1,0 +1,34 @@
+{
+  "Field": {
+    "Width": 640,
+    "Height": 480
+  },
+  "Obstacles": [
+    {
+      "X": 150,
+      "Y": 150,
+      "Width": 50,
+      "Height": 75
+    },
+    {
+      "X": 450,
+      "Y": 300,
+      "Width": 75,
+      "Height": 50
+    }
+  ],
+  "Tanks": [
+    {
+      "X": 50,
+      "Y": 50,
+      "Width": 50,
+      "Height": 50
+    },
+    {
+      "X": 450,
+      "Y": 200,
+      "Width": 50,
+      "Height": 50
+    }
+  ]
+}

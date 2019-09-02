@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Moving Tanks</title>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+<body>
+
+    <canvas id="field" class="fieldclass" style="display:none;"></canvas>
+
+
+    <div class="flexdiv">
+        <label class="labelstyle">Speed:</label>
+
+        <div class="minus" onclick="ChangeSpeed(-1)"></div>
+
+        <label id="value" class="labelstyle labelvalueone unselectable"></label>
+
+        <div class="plus" onclick="ChangeSpeed(1)"></div>
+    </div>
+
+    <style>
+        .fieldclass {
+            border-color: black;
+            border-style: solid;
+            border-width: thin;
+            background-color: white;
+        }
+
+        .labelstyle {
+            font-size: 17px;
+        }
+
+        .labelvalueone {
+            margin-left: 10px;
+            margin-right: 10px
+        }
+
+        .labelvaluetwo {
+            margin-left: 6px;
+            margin-right: 6px
+        }
+
+        .plus {
+            background: url('images/plus.svg') no-repeat 0 0;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .minus {
+            background: url('images/minus.svg') no-repeat 0 0;
+            width: 20px;
+            height: 20px;
+            margin-left: 0.5em;
+            cursor: pointer;
+        }
+
+        .flexdiv{
+            display: flex;
+            flex-direction: row;
+        }
+
+        .unselectable {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none; 
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+    </style>
+
+    <script>
+
+        var field;
+        var context;
+        var field;
+        var speed;
+
+        var tanks;
+        var obstacles;
+        var timerId;
+        var times;
+
+        $(document).ready(function () {
+            times = 0;
+            timerId = setInterval(reload, 1000);
+        });
+
+        function reload() {
+            $.ajax({
+                type: "GET",
+                url: "https://localhost:44377/api/field/getfield/",
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    if (data.result) {
+                        tanks = data.tanks;
+                        obstacles = data.obstacles;
+
+                        if (times === 0) {
+                            field = data.field;
+                            $("#field").css('width', field.width + 'px');
+                            $("#field").css('height', field.height + 'px');
+                            $("#field").attr('width', field.width);
+                            $("#field").attr('height', field.height);
+                            $("#field").show();
+                            speed = data.speed;
+                            $("#value").html(speed);
+
+                            field = document.getElementById("field");
+                            context = field.getContext('2d');
+                            times = 1;
+                        }
+
+                        drawField();
+                    }
+                    else {
+                        alert("Что-то пошло не так! Такое поле невозможно нарисовать!")
+                        setTimeout(() => { clearInterval(timerId); }, 0);
+                    }
+                },
+            });
+        }
+
+        function drawObstacle(obstacle) {
+            context.fillStyle = 'black';
+            context.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
+
+        function drawTank(tank) {
+            drawObstacle(tank);
+            drawBorder(tank.x, tank.y, tank.width, tank.height);
+        }
+
+        function drawBorder(xPos, yPos, width, height, thickness = 1.5) {
+            context.fillStyle = 'red';
+            context.fillRect(xPos + (thickness), yPos + (thickness), width - (thickness * 2), height - (thickness * 2));
+        }
+
+
+        function drawField() {
+            context.clearRect(0, 0, field.width, field.height);
+
+            for (var i = 0; i < tanks.length; i++) {
+                drawTank(tanks[i]);
+            }
+
+            for (var i = 0; i < obstacles.length; i++) {
+                drawObstacle(obstacles[i]);
+            }
+        }
+
+        function ChangeSpeed(dif) {
+            if (speed + dif > 20 || speed + dif < 0) {
+                return;
+            }
+            speed += dif;
+
+            $.ajax({
+                type: "GET",
+                url: "https://localhost:44377/api/field/setspeed/",
+                data: "speed="+speed,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    if (data.result) {
+                        speed = data.speed;
+
+                        if (speed > 9) {
+                            $("#value").removeClass("labelvalueone")
+                            $("#value").addClass("labelvaluetwo")
+                        }
+
+                        if (speed < 10) {
+                            $("#value").addClass("labelvalueone")
+                            $("#value").removeClass("labelvaluetwo")
+                        }
+
+                        $("#value").html(speed);
+                    }
+                    else {
+                        alert("Что-то пошло не так! Такой скорости быть не может!")
+                    }
+                },
+            });
+        }
+
+    </script>
+</body>
+</html>
